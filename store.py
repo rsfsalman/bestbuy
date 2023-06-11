@@ -150,8 +150,6 @@ class Store:
                 # print(f"{index}. {product.name}, Price: ${product.price}, "
                 #       f"Quantity: {product.quantity}")
                 print(f"{index}.", product)
-            # print(f"--- {len(active_products)} categories were found! ---")
-
             if len(active_products) == 1:
                 print(f"--- {len(active_products)} category was found! ---")
             elif len(active_products) > 1:
@@ -253,7 +251,7 @@ class Store:
             if isinstance(items_list[selected_index], LimitedProduct):
                 temp_product: LimitedProduct = items_list[selected_index]
                 if quantity > temp_product.get_limit():
-                    display_limit_message(temp_product.limit, items_list[selected_index.name])
+                    display_limit_message(temp_product.limit, items_list[selected_index])
                     continue
 
             # if quantity is zero then cancel the current process and ignore it.

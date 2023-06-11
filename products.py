@@ -202,35 +202,6 @@ class Product:
             return f"Purchased {quantity_to_purchase} units of {self.name}.", total_price
         return f"{self.name} is out of stock.", total_price
 
-    # def buy(self, purchase_quantity):
-    #     """
-# 	The buy method allows purchasing a specific quantity of the product.
-#
-# 	:param: purchase_quantity (int): The quantity of the product to be purchased.
-#
-# 	:return: (float) The total price of the purchased quantity of the product.
-#
-# 	Raises:
-# 		ValueError: If there are no more items available (quantity is 0) or
-# 		if the purchase quantity exceeds the available quantity.
-# 		The exception message provides details on the error.
-#
-# 		Note: 	If an error occurs during the purchase process, None is returned
-# 				and an error message is printed
-# 	"""
-#     try:
-#         if self.quantity == 0:
-#             raise ValueError("No more items available.")
-#
-#         self.quantity -= purchase_quantity
-#         if self.quantity == 0:
-#             self.deactivate()
-#
-#         return self.price * purchase_quantity
-#     except ValueError as err:
-#         print("Error:", str(err))
-#         return None
-
 
 class NonStockedProduct(Product):
     """
@@ -244,8 +215,6 @@ class NonStockedProduct(Product):
     Customers can purchase the non-stocked product up to the maximum allowed quantity specified
     by the policy.
     """
-    none_stocked_product_identifier = 0
-
     def __init__(self, name, price):
         super().__init__(name, price, quantity=0)
         self.activate()
@@ -270,23 +239,15 @@ class NonStockedProduct(Product):
         # Method implementation goes here (if any)
         # Since we don't want to deactivate the non-stocked product, this method can be left empty
 
-    # def is_active(self):
-    #     """
-	# 	The is_active method checks if the product is active.
-    #
-	# 	:return: bool: True if the product is active, False otherwise.
-	# 	"""
-    #     return self.active
+    def __str__(self):
+        """
+    	The __str__ method displays information about the product.
 
-    # def __str__(self):
-    #     """
-	# 	The __str__ method displays information about the product.
-    #
-	# 	:return: (str) A string representation of the product with the following format:
-	# 					"{product name}, Price: {price}, Quantity: {quantity}".
-	# 	"""
-    #     promotion_string = f"Promotion: {getattr(self.promotion, 'name', 'None')}"
-    #     return f"{self.name}, Price: {self.price}, Quantity: Unlimited, {promotion_string}"
+    	:return: (str) A string representation of the product with the following format:
+    						"{product name}, Price: {price}, Quantity: Unlimited".
+    	"""
+        promotion_string = f"Promotion: {getattr(self.promotion, 'name', 'None')}"
+        return f"{self.name}, Price: {self.price}, Quantity: Unlimited, {promotion_string}"
 
     def buy(self, quantity_to_purchase):
         """
