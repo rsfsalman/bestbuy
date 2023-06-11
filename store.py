@@ -24,62 +24,6 @@ from typing import List, Tuple, Optional
 from products import Product, NonStockedProduct, LimitedProduct
 
 
-def order_intro():
-    """
-	Provides an introduction to the ordering process.
-	"""
-    # start the shopping
-    print("\nEnter the number of the item you want to order (or 0 to cancel)")
-    # When you want to finish order, enter empty text.
-    print("To proceed with the checkout, simply input an empty text.")
-
-
-def make_option_list(start: int, end: int) -> List[str]:
-    """
-	Create a list of string options based on the provided range.
-
-	:param start: (int) The starting number of the range (inclusive)
-	:param end: (int) The ending number of the range (exclusive)
-
-	:return: (List[str]) A list of string options.
-	"""
-    # prepare the valid options menu
-    options = []
-    for num in range(start, end):
-        options.append(str(num))
-    options.append("")
-    return options
-
-
-def find_quantity_of_added_item(lst, product_name):
-    """
-    Search for a specific product by its name and returns the quantity that has been ordered
-
-    :param lst: (list) The order list, a list of tuples containing product name and its quantity.
-    :param product_name: (str) The name of the product to search for in the list.
-
-    :return: int: The quantity of the product that has been ordered if found, -1 otherwise.
-    """
-    for name, items_count in lst:
-        if name == product_name:
-            return items_count
-    return -1
-
-
-def display_limit_message(product_limit, product_name):
-    """
-    Displays a limit message indicating the maximum allowed quantity for a product.
-
-    :param product_limit: (int): The maximum allowed quantity for the product.
-    :param product_name: (str): The name of the product.
-    :return: None
-    """
-    if product_limit == 1:
-        print(f"Sorry, Only {product_limit} unit is allowed from {product_name}.")
-    else:
-        print(f"Sorry, Only {product_limit} units are allowed from {product_name}.")
-
-
 class Store:
     """
 	A class representing a store
@@ -98,6 +42,62 @@ class Store:
 	"""
     # The maximum number of items allowed as per the policy
     OUR_POLICY_MAX_ALLOWED_ITEMS = 10000
+
+    @classmethod
+    def order_intro(cls):
+        """
+    	Provides an introduction to the ordering process.
+    	"""
+        # start the shopping
+        print("\nEnter the number of the item you want to order (or 0 to cancel)")
+        # When you want to finish order, enter empty text.
+        print("To proceed with the checkout, simply input an empty text.")
+
+    @classmethod
+    def make_option_list(cls, start: int, end: int) -> List[str]:
+        """
+    	Create a list of string options based on the provided range.
+
+    	:param start: (int) The starting number of the range (inclusive)
+    	:param end: (int) The ending number of the range (exclusive)
+
+    	:return: (List[str]) A list of string options.
+    	"""
+        # prepare the valid options menu
+        options = []
+        for num in range(start, end):
+            options.append(str(num))
+        options.append("")
+        return options
+
+    @classmethod
+    def find_quantity_of_added_item(cls, lst, product_name):
+        """
+        Search for a specific product by its name and returns the quantity that has been ordered
+
+        :param lst: (list) The order list, a list of tuples containing product name and its quantity.
+        :param product_name: (str) The name of the product to search for in the list.
+
+        :return: int: The quantity of the product that has been ordered if found, -1 otherwise.
+        """
+        for name, items_count in lst:
+            if name == product_name:
+                return items_count
+        return -1
+
+    @classmethod
+    def display_limit_message(cls, product_limit, product_name):
+        """
+        Displays a limit message indicating the maximum allowed quantity for a product.
+
+        :param product_limit: (int): The maximum allowed quantity for the product.
+        :param product_name: (str): The name of the product.
+        :return: None
+        """
+        if product_limit == 1:
+            print(f"Sorry, Only {product_limit} unit is allowed from {product_name}.")
+        else:
+            print(f"Sorry, Only {product_limit} units are allowed from {product_name}.")
 
     def __init__(self, products):
         """
@@ -242,7 +242,7 @@ class Store:
 
             if stoked_item:
                 previously_added_quantity = \
-                    find_quantity_of_added_item(order_list, items_list[selected_index].name)
+                    Store.find_quantity_of_added_item(order_list, items_list[selected_index].name)
             else:
                 previously_added_quantity = -1  # we don't care if it is non stocked items
             quantity = self.valid_range("What amount do you want? ", range(1, max_num), stoked_item,
@@ -251,7 +251,7 @@ class Store:
             if isinstance(items_list[selected_index], LimitedProduct):
                 temp_product: LimitedProduct = items_list[selected_index]
                 if quantity > temp_product.get_limit():
-                    display_limit_message(temp_product.limit, items_list[selected_index])
+                    Store.display_limit_message(temp_product.limit, items_list[selected_index])
                     continue
 
             # if quantity is zero then cancel the current process and ignore it.
@@ -309,10 +309,10 @@ class Store:
                   "Please visit us again later! ---")
             return
 
-        order_intro()
+        Store.order_intro()
 
         # prepare the valid options menu
-        options = make_option_list(0, max_num + 1)
+        options = Store.make_option_list(0, max_num + 1)
 
         # if this is the first purchase or not
         order_list = self.init_order_list()
@@ -511,7 +511,6 @@ class Store:
             if option.isdigit():
                 if start <= int(option) <= end:
                     if non_stocked_product:
-                        # print("Already added = ", items_allready_added)
                         if previously_added_quantity > -1:
                             max_items = end - previously_added_quantity
                         else:

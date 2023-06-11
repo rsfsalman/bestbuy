@@ -139,44 +139,5 @@ def main():
     start(best_buy)
 
 
-def quick_test():
-    """
-    Performs a quick test of the functionality of the Store and Product classes.
-
-    The test includes the following steps:
-    1. Initializes the initial stock of inventory with specific products.
-    2. Attempts to set a negative price for a product, which should raise a ValueError.
-    3. Prints the details of the 'mac' product, including its name, price, quantity, and promotion.
-    4. Compares the 'mac' product with the 'bose' product, printing True if the 'mac' price is
-        higher.
-    5. Checks if the 'mac' product is present in the 'best_buy' store, printing True if it is.
-    6. Checks if the 'pixel' product is present in the 'best_buy' store,
-        printing False if it is not.
-
-    :return: None
-    """
-    # setup initial stock of inventory
-    mac = Product("MacBook Air M2", price=1450, quantity=100)
-    bose = Product("Bose QuietComfort Earbuds", price=250, quantity=500)
-    pixel = LimitedProduct("Google Pixel 7", price=500, quantity=250, limit=1)
-    best_buy = Store([mac, bose])
-
-    print("\n ---> Executing a quick test as requested in the exercise to verify\n"
-          " the functionality of the magic methods. <---")
-
-    try:
-        mac.price = -100  # Should give error
-    except ValueError as error:
-        print("Error:", str(error))
-
-    print(mac)  # Should print 'MacBook Air M2, Price: $1450 Quantity:100, Promotion: None'
-    print(mac > bose)  # Should print True
-    print(mac in best_buy)  # Should print True
-    print(pixel in best_buy)  # Should print False
-
-    print(" ---> The test was successfully completed. <---\n")
-
-
 if __name__ == "__main__":
-    quick_test()
     main()
