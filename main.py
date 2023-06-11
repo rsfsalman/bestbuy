@@ -5,7 +5,8 @@
 # functions to interact with the store via command dispatcher,
 # allowing the customer to add product, place an order,
 # and display information about available products and quantities.
-# Unit test was added to the project to test
+# Unit testing was added to the project, you can find it in 'test_products.py'
+#
 # The program uses the 'Product' and 'Store' classes from the 'products'
 # and 'store' modules.
 #
@@ -31,6 +32,25 @@
 #	5- The program effectively handles all potential errors and provides
 #	appropriate responses. It displays clear and informative messages that
 #	explain what is happening and guide the user in understanding the situation.
+#
+#   6-  a). The program offers 3 exciting promotions feature, and these are:
+#       Second Half Price: With this promotion, when you purchase two identical items, you will
+#       receive a 50% discount on the second item. This allows you to enjoy significant savings
+#       while stocking up on your favorite products.
+#
+#       b). Third Item is Free: This promotion rewards your loyalty by offering a complimentary item
+#       for every two items you purchase. When you add three identical items to your cart, the
+#       system automatically deducts the price of the third item, making it absolutely free. It's a
+#       great way to get more value from your purchases.
+#
+#       c). 30% Discount: The third promotion provides a generous 30% discount on eligible items.
+#
+#   7- Unit testing: Unit testing is a crucially implemented feature in the BestBuy program,
+#   aiming to ensure the program's reliability and correctness.
+#   The pytest framework is utilized to create a comprehensive suite of unit tests that
+#   specifically target the behavior of the Product class.
+#   These tests cover a wide range of scenarios, including creating products with valid and invalid parameters,
+#   handling edge cases, and verifying the expected behavior of the product's functionality.
 #
 # The code is well-organized and modularized,
 # adhering to the PEP8 guidelines for Python coding style
