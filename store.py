@@ -95,9 +95,9 @@ class Store:
         :return: None
         """
         if product_limit == 1:
-            print(f"Sorry, Only {product_limit} unit is allowed from {product_name}.")
+            print(f"Sorry, Only {product_limit} unit is allowed from {product_name} per order.")
         else:
-            print(f"Sorry, Only {product_limit} units are allowed from {product_name}.")
+            print(f"Sorry, Only {product_limit} units are allowed from {product_name} per order.")
 
     def __init__(self, products):
         """
@@ -251,7 +251,7 @@ class Store:
             if isinstance(items_list[selected_index], LimitedProduct):
                 temp_product: LimitedProduct = items_list[selected_index]
                 if quantity > temp_product.get_limit():
-                    Store.display_limit_message(temp_product.limit, items_list[selected_index])
+                    Store.display_limit_message(temp_product.limit, items_list[selected_index].name)
                     continue
 
             # if quantity is zero then cancel the current process and ignore it.
