@@ -1,11 +1,11 @@
 # ==========================================================================
 #						          Best Buy
-# Implementation of a store application. The code consist manily of 3 files
-# main.py, products.py and sotre.py, main.py defines the main functions to
-# interact with the store via command dispatcher,
+# Implementation of a store application. The code consist mainly of 4 files
+# main.py, products.py, store.py and promotions.py, main.py defines the main
+# functions to interact with the store via command dispatcher,
 # allowing the customer to add product, place an order,
 # and display information about available products and quantities.
-#
+# Unit test was added to the project to test
 # The program uses the 'Product' and 'Store' classes from the 'products'
 # and 'store' modules.
 #
@@ -51,8 +51,9 @@ Author:
 Date:
     [2023-06-01]
 """
-from products import Product
+from products import Product, NonStockedProduct, LimitedProduct
 from store import Store
+import promotions
 
 
 def start(store: Store):
@@ -70,6 +71,8 @@ def start(store: Store):
     # assuming we are not done.
     # exit will be from within the loop
     done: bool = False
+    print("Welcome to our store! We are delighted to have you here.\n"
+          "Start exploring our wide range of products and enjoy your shopping experience.")
     while not done:
         store.display_store_menu()
 
@@ -84,8 +87,8 @@ def start(store: Store):
         else:
             print("\n  Please provide a valid input. Only values of 1, 2, 3, or 4 are allowed.")
 
-    print("Thank you for shppoing with us, Wish you a fantastic day!"
-          "We look forward to serving you again in the future.\n")
+    print("Thank you for shopping with us, Wish you a fantastic day!"
+          " We look forward to serving you again in the future.\n")
 
 
 def main():
@@ -96,8 +99,19 @@ def main():
     product_list = [
         Product("MacBook Air M2", price=1450, quantity=100),
         Product("Bose QuietComfort Earbuds", price=250, quantity=500),
-        Product("Google Pixel 7", price=500, quantity=250)
+        Product("Google Pixel 7", price=500, quantity=250),
+        NonStockedProduct("Windows License", price=125),
+        LimitedProduct("Shipping", price=10, quantity=250, limit=1)
     ]
+
+    # Create promotion catalog
+    second_half_price = promotions.SecondHalfPrice("Second Half price!")
+    third_one_free = promotions.ThirdOneFree("Third One Free!")
+    thirty_percent = promotions.PercentDiscount("30% off!", percent=30)
+
+    product_list[0].set_promotion(second_half_price)
+    product_list[1].set_promotion(third_one_free)
+    product_list[3].set_promotion(thirty_percent)
 
     # Create a Store instance named 'best_buy' using the 'product_list'
     best_buy = Store(product_list)
@@ -105,5 +119,44 @@ def main():
     start(best_buy)
 
 
+def quick_test():
+    """
+    Performs a quick test of the functionality of the Store and Product classes.
+
+    The test includes the following steps:
+    1. Initializes the initial stock of inventory with specific products.
+    2. Attempts to set a negative price for a product, which should raise a ValueError.
+    3. Prints the details of the 'mac' product, including its name, price, quantity, and promotion.
+    4. Compares the 'mac' product with the 'bose' product, printing True if the 'mac' price is
+        higher.
+    5. Checks if the 'mac' product is present in the 'best_buy' store, printing True if it is.
+    6. Checks if the 'pixel' product is present in the 'best_buy' store,
+        printing False if it is not.
+
+    :return: None
+    """
+    # setup initial stock of inventory
+    mac = Product("MacBook Air M2", price=1450, quantity=100)
+    bose = Product("Bose QuietComfort Earbuds", price=250, quantity=500)
+    pixel = LimitedProduct("Google Pixel 7", price=500, quantity=250, limit=1)
+    best_buy = Store([mac, bose])
+
+    print("\n ---> Executing a quick test as requested in the exercise to verify\n"
+          " the functionality of the magic methods. <---")
+
+    try:
+        mac.price = -100  # Should give error
+    except ValueError as error:
+        print("Error:", str(error))
+
+    print(mac)  # Should print 'MacBook Air M2, Price: $1450 Quantity:100, Promotion: None'
+    print(mac > bose)  # Should print True
+    print(mac in best_buy)  # Should print True
+    print(pixel in best_buy)  # Should print False
+
+    print(" ---> The test was successfully completed. <---\n")
+
+
 if __name__ == "__main__":
+    quick_test()
     main()

@@ -21,7 +21,7 @@ Date:
 import random
 import string
 from typing import List, Tuple, Optional
-from products import Product
+from products import Product, NonStockedProduct, LimitedProduct
 
 
 def order_intro():
@@ -51,6 +51,35 @@ def make_option_list(start: int, end: int) -> List[str]:
     return options
 
 
+def find_quantity_of_added_item(lst, product_name):
+    """
+    Search for a specific product by its name and returns the quantity that has been ordered
+
+    :param lst: (list) The order list, a list of tuples containing product name and its quantity.
+    :param product_name: (str) The name of the product to search for in the list.
+
+    :return: int: The quantity of the product that has been ordered if found, -1 otherwise.
+    """
+    for name, items_count in lst:
+        if name == product_name:
+            return items_count
+    return -1
+
+
+def display_limit_message(product_limit, product_name):
+    """
+    Displays a limit message indicating the maximum allowed quantity for a product.
+
+    :param product_limit: (int): The maximum allowed quantity for the product.
+    :param product_name: (str): The name of the product.
+    :return: None
+    """
+    if product_limit == 1:
+        print(f"Sorry, Only {product_limit} unit is allowed from {product_name}.")
+    else:
+        print(f"Sorry, Only {product_limit} units are allowed from {product_name}.")
+
+
 class Store:
     """
 	A class representing a store
@@ -67,6 +96,8 @@ class Store:
 		remove_product: Remove a product from the store.
 		order: Place an order for a given shopping list and calculate the total price.
 	"""
+    # The maximum number of items allowed as per the policy
+    OUR_POLICY_MAX_ALLOWED_ITEMS = 10000
 
     def __init__(self, products):
         """
@@ -74,9 +105,18 @@ class Store:
 
 		:param products: (list): A list of Product instances to be added to the store.
 		"""
-        self.products_list = products
+        self.products_list: List[Product] = products
         self.purchased_list = []
         self.order_list = []
+
+    def __contains__(self, product):
+        """
+         The __contains__ method checks if a product exists in the store.
+
+        :param product: (Product) The product to check.
+        :return: (bool) True if the product exists in the store, False otherwise
+        """
+        return product in self.products_list
 
     @classmethod
     def display_store_menu(cls):
@@ -99,7 +139,7 @@ class Store:
 		Returns:
 			List[Product]: A list of active products available in the store.
 		"""
-        active_products = []
+        active_products: List[Product] = []
         for product in self.products_list:
             if product.is_active():
                 active_products.append(product)
@@ -107,8 +147,9 @@ class Store:
         if display_flag:
             print("\n------- Available Items -------")
             for index, product in enumerate(active_products, start=1):
-                print(f"{index}. {product.name}, Price: ${product.price}, "
-                      f"Quantity: {product.quantity}")
+                # print(f"{index}. {product.name}, Price: ${product.price}, "
+                #       f"Quantity: {product.quantity}")
+                print(f"{index}.", product)
             # print(f"--- {len(active_products)} categories were found! ---")
 
             if len(active_products) == 1:
@@ -164,14 +205,97 @@ class Store:
 
     def init_order_list(self) -> List:
         """
-		A special method to initialize the order list
+		Initializes the order list.
 
-		:return: (list)
+        This method is used to create an empty order list when it's first initialized
+
+		:return: (list): An empty order list.
 		"""
         # if len(self.purchased_list) > 0:
         # 	return self.purchased_list
         self.purchased_list = []
         return []
+
+    def specify_product_quantity(self, max_num, selected_index, items_list, order_list):
+        """
+        Allows the user to specify the quantity to add to the order.
+
+        :param max_num: (int): The maximum allowed quantity for the selected product.
+
+        :param selected_index: The index of the selected product in the items_list
+        :param items_list: A list of available products
+        :param order_list: The current order list
+
+        :return:
+            tuple: A tuple containing the order status (True for confirmed, False for cancelled) and
+               a flag indicating whether the order is completed (True) or still ongoing (False).
+        """
+        # reference status to indicate order status
+        cancelled_status = False
+        confirmed_status = True
+
+        # assume confirmed status
+        order_status = confirmed_status
+        order_is_done = False
+
+        while True:
+            # Validate the entered range of quantity.
+            stoked_item = isinstance(items_list[selected_index], NonStockedProduct)
+
+            if stoked_item:
+                previously_added_quantity = \
+                    find_quantity_of_added_item(order_list, items_list[selected_index].name)
+            else:
+                previously_added_quantity = -1  # we don't care if it is non stocked items
+            quantity = self.valid_range("What amount do you want? ", range(1, max_num), stoked_item,
+                                        previously_added_quantity)
+
+            if isinstance(items_list[selected_index], LimitedProduct):
+                temp_product: LimitedProduct = items_list[selected_index]
+                if quantity > temp_product.get_limit():
+                    display_limit_message(temp_product.limit, items_list[selected_index.name])
+                    continue
+
+            # if quantity is zero then cancel the current process and ignore it.
+            if quantity == 0:
+                # is_accepted = True
+                order_status = cancelled_status
+                order_is_done = True
+                break
+            if quantity == -6:
+                order_status = confirmed_status
+                order_is_done = True
+                # print("Salman it is = -6")
+                break
+            if quantity == -1:
+                continue
+
+            # Try to add this item to the order.
+            success, qty_to_adjust = self.add_product_to_order(items_list[selected_index].name,
+                                                               quantity, order_list)
+
+            # Determine if the entered quantity exceeds the available range.
+            if qty_to_adjust > 0:
+                max_num = quantity - qty_to_adjust
+                if max_num == 0:
+                    # print(f"No more items available from {items_list[selected_index].name}")
+                    print(f"The {items_list[selected_index].name} is currently out of stock.")
+                    print(f"{items_list[selected_index].name} item is deactivated!")
+                    break
+                print("--- The available quantity for purchase is insufficient, "
+                      f"with a maximum limit of {max_num} units. ---")
+                continue
+
+            # if every thing went smoothly,it indicates that the process has been accepted
+            # and successful
+            if success and qty_to_adjust == 0:
+                # is_accepted = True
+                print(f"  <---- You have successfully added {quantity} of "
+                      f"{items_list[selected_index].name}"
+                      " to your order. ---->")
+                self.purchased_list = order_list
+                break
+        return order_status, order_is_done
 
     def place_order(self):
         """
@@ -229,56 +353,23 @@ class Store:
 
             # find the maximum available quantity
             max_num = items_list[selected_index].quantity
-
-            while True:
-                # Validate the entered range of quantity.
-                quantity = self.valid_range("What amount do you want? ", range(1, max_num))
-                # if quantity is zero then cancel the current process and ignore it.
-                if quantity == 0:
-                    # is_accepted = True
-                    order_status = cancelled_status
-                    order_is_done = True
-                    break
-                if quantity == -6:
-                    order_status = confirmed_status
-                    order_is_done = True
-                    # print("Salman it is = -6")
-                    break
-                # Try to add this item to the order.
-                success, qty_to_adjust = self.add_product_to_order(items_list[selected_index].name,
-                                                                   quantity, order_list)
-
-                # Determine if the entered quantity exceeds the available range.
-                if qty_to_adjust > 0:
-                    max_num = quantity - qty_to_adjust
-                    if max_num == 0:
-                        # print(f"No more items available from {items_list[selected_index].name}")
-                        print(f"The {items_list[selected_index].name} is currently out of stock.")
-                        print(f"{items_list[selected_index].name} item is deactivated!")
-                        break
-                    print("--- The available quantity for purchase is insufficient, "
-                          f"with a maximum limit of {max_num} units. ---")
-                    continue
-
-                # if every thing went smoothly,it indicates that the process has been accepted
-                # and successful
-                if success and qty_to_adjust == 0:
-                    # is_accepted = True
-                    print(f"  <---- You have successfully added {quantity} of "
-                          f"{items_list[selected_index].name}"
-                          " to your order. ---->")
-                    self.purchased_list = order_list
-                    break
-
+            # print(type(items_list[selected_index]))
+            if isinstance(items_list[selected_index], NonStockedProduct):
+                # Ensure that the maximum number of items does not exceed the policy limit
+                max_num = Store.OUR_POLICY_MAX_ALLOWED_ITEMS
+                # print(max_num)
+            order_status, order_is_done = self.specify_product_quantity(max_num, selected_index,
+                                                                        items_list, order_list)
             print("")
-        # If the order is finalized, proceed with generating a summary or bill
+        # If the order is confirmed, proceed to generate a summary or bill
         # for the completed order
         if order_status == confirmed_status:
             # total_price = self.order(order_list)
-            print("--- Order confirmed ---")
-            print("You have purchased the following items:")
-            self.display_order_summary(order_list, self.order(order_list))
-        # self.purchased_list = order_list
+            if len(order_list) > 0:
+                print("--- Order confirmed ---")
+                print("You have purchased the following items:")
+                self.display_order_summary(order_list, self.order(order_list))
+                # self.purchased_list = order_list
         else:
             # Inform the customer that the order has been cancelled
             print("--- Order cancelled ----")
@@ -309,6 +400,9 @@ class Store:
 		"""
         product = self.find_product_by_name(product_name)
         available_quantity = product.quantity
+        if isinstance(product, NonStockedProduct):
+            available_quantity = 2 ** 32
+
         for index, item in enumerate(lst):
             if item[0] == product_name:
                 old_item = item
@@ -339,13 +433,18 @@ class Store:
     @staticmethod
     def display_order_summary(order_list: List[Product], total_price: float) -> None:
         """
-		display_order_summary
-		"""
+        Displays the order summary.
+
+        :param order_list: (List[Product]): A list of products in the order, along with
+                            their quantities
+        :param total_price: The total price of the order
+        :return: None
+        """
         order_id = Store.generate_order_id(9)
         print(f"\n  <---- Order #{order_id} Summary ---->")
         print(" You have successfully purchased the following:")
-        for index, item in enumerate(order_list, start=1):
-            print(f"{index}. {item[0]} - Qty: {item[1]}")
+        for index, obj in enumerate(order_list, start=1):
+            print(f"{index}. {obj[0].ljust(18)} - Qty: {obj[1]}")
         print("------------------------------------------")
         print(f"   Total price:         ${total_price}")
 
@@ -362,7 +461,8 @@ class Store:
             # product.quantity -= quantity
             for product in self.products_list:
                 if product.name == item[0]:
-                    total_price += product.buy(item[1])
+                    _, price = product.buy(item[1])
+                    total_price += price
                     break
         return total_price
 
@@ -385,17 +485,22 @@ class Store:
             print(f"\n*** Sorry, the option {option} is invalid. Try again! ***\n")
 
     @staticmethod
-    def valid_range(prompt: str, the_range: range) -> int:
+    def valid_range(prompt: str, the_range: range, non_stocked_product: bool,
+                    previously_added_quantity: int) -> int:
         """
-        Validates user input against a list of options.
+        Validates and returns a quantity within the specified range.
 
-        This function prompts the user with the given prompt and validates their input against
-        the provided list of options. It continues to prompt the user until a valid option
-        is entered.
+        This method prompts the user with the given prompt and validates their input against
+        the available quantity of the selected product.
+        It repeatedly prompts the user until a valid quantity is entered.
 
         :param prompt: (str) The prompt to display to the user.
-        :param the_range:
-        :return: (str) The user's input, which is a valid option.
+        :param the_range: The range of valid values for the quantity.
+        :param non_stocked_product: (bool) Indicates whether the product is non-stocked
+        :param previously_added_quantity: The quantity of the product previously
+                added to the order.
+
+        :return: (int) The validated quantity within the specified range.
         """
         start = the_range.start
         end = the_range.stop
@@ -407,6 +512,30 @@ class Store:
                 return -6
             if option.isdigit():
                 if start <= int(option) <= end:
+                    if non_stocked_product:
+                        # print("Already added = ", items_allready_added)
+                        if previously_added_quantity > -1:
+                            max_items = end - previously_added_quantity
+                        else:
+                            max_items = end
+                        if int(option) > max_items:
+                            print("\n*** Sorry, we have a policy in place that restricts the number"
+                                  " of non stocked "
+                                  f"items per order to a maximum of {end} units.\nSince you have"
+                                  " already purchased "
+                                  f"{previously_added_quantity} items, you can still buy an "
+                                  f"additional {max_items} within"
+                                  " the allowed limit")
+                            return -1
                     return int(option)
-            print(f"\n*** Sorry, the option {option} is invalid. Maximum available quantity is "
-                  f"({end}) Try again! ***\n")
+
+                if non_stocked_product:
+                    print("\n*** Sorry, we have a policy in place that restricts the"
+                          " number of non stocked "
+                          f"items per order to a maximum of {end} units.")
+                else:
+                    print(f"\n*** Sorry, the option {option} is invalid. Maximum available"
+                          f" quantity is ({end}) Try again! ***\n")
+            else:
+                print("*** Invalid option.*** Make sure to enter numeric values between"
+                      f" {start, end}")
